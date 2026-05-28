@@ -1,0 +1,52 @@
+import { Send, Eye } from "lucide-react";
+import { waivers } from "@/lib/data";
+import { StatusBadge } from "@/components/badge";
+import { Metric } from "./gc-dashboard";
+
+export function LienWaivers() {
+  const received = waivers.filter((w) => w.status === "received").length;
+  const outstanding = waivers.filter((w) => w.status === "outstanding").length;
+  return (
+    <div>
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <Metric label="Waivers received" value={String(received)} />
+        <Metric label="Outstanding" value={String(outstanding)} />
+        <Metric label="Payment holds" value="2 subs" sub="Blocked pending waiver" />
+      </div>
+      <div className="card">
+        <div className="flex justify-between items-center mb-3">
+          <div className="text-sm font-medium">Lien waiver log</div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="data">
+            <thead>
+              <tr>
+                <th>Subcontractor</th><th>Draw</th><th>Type</th>
+                <th>Amount</th><th>Date received</th><th>Status</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {waivers.map((w, i) => (
+                <tr key={i}>
+                  <td>{w.sub}</td>
+                  <td className="text-fg-secondary">Draw {w.draw}</td>
+                  <td className="text-fg-secondary">{w.type}</td>
+                  <td className="font-medium">{w.amount}</td>
+                  <td className="text-fg-secondary text-xs">{w.date}</td>
+                  <td><StatusBadge status={w.status} /></td>
+                  <td>
+                    {w.status === "outstanding" ? (
+                      <button className="btn btn-sm"><Send size={12} /> Remind</button>
+                    ) : (
+                      <button className="btn btn-sm"><Eye size={12} /> View</button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}

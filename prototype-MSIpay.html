@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSI Pay — Invoice Management Prototype</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f5f3;
+    --color-background-tertiary: #eeede9;
+    --color-text-primary: #1a1a18;
+    --color-text-secondary: #6b6b67;
+    --color-text-tertiary: #9e9e99;
+    --color-border-tertiary: rgba(0,0,0,0.1);
+    --color-border-secondary: rgba(0,0,0,0.18);
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'SF Mono', 'Fira Code', monospace;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #1e1e1c;
+      --color-background-secondary: #2a2a28;
+      --color-background-tertiary: #141412;
+      --color-text-primary: #f0efe9;
+      --color-text-secondary: #9e9e96;
+      --color-text-tertiary: #6b6b67;
+      --color-border-tertiary: rgba(255,255,255,0.08);
+      --color-border-secondary: rgba(255,255,255,0.14);
+    }
+  }
+  body { font-family: var(--font-sans); background: var(--color-background-tertiary); color: var(--color-text-primary); }
+  .app { display: flex; height: 100vh; overflow: hidden; }
+  .sidebar { width: 220px; flex-shrink: 0; background: var(--color-background-primary); border-right: 0.5px solid var(--color-border-tertiary); display: flex; flex-direction: column; }
+  .sidebar-logo { padding: 18px 16px 12px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .logo-text { font-size: 15px; font-weight: 500; color: var(--color-text-primary); letter-spacing: -0.3px; }
+  .logo-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .role-switcher { padding: 10px 12px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .role-label { font-size: 10px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+  .role-select { width: 100%; font-size: 12px; padding: 5px 8px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); cursor: pointer; }
+  .nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+  .nav-section { padding: 12px 16px 4px; font-size: 10px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 16px; font-size: 13px; color: var(--color-text-secondary); cursor: pointer; transition: background 0.1s; }
+  .nav-item:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+  .nav-item.active { background: var(--color-background-secondary); color: var(--color-text-primary); font-weight: 500; border-right: 2px solid #1D9E75; }
+  .nav-item i { font-size: 15px; flex-shrink: 0; }
+  .nav-badge { margin-left: auto; background: #E24B4A; color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 500; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { height: 52px; background: var(--color-background-primary); border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; padding: 0 20px; gap: 12px; }
+  .topbar-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 13px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); cursor: pointer; transition: background 0.1s; font-family: var(--font-sans); }
+  .btn:hover { background: var(--color-background-secondary); }
+  .btn.primary { background: #1D9E75; border-color: #1D9E75; color: #fff; }
+  .btn.primary:hover { background: #0F6E56; }
+  .btn.danger { background: #E24B4A; border-color: #E24B4A; color: #fff; }
+  .btn.danger:hover { background: #A32D2D; }
+  .btn.sm { padding: 4px 10px; font-size: 12px; }
+  .content { flex: 1; overflow-y: auto; padding: 20px; }
+  .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 16px 20px; margin-bottom: 16px; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .card-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+  .metric-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .metric-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .metric-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; font-size: 11px; font-weight: 500; color: var(--color-text-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--color-background-secondary); }
+  .badge { display: inline-flex; align-items: center; font-size: 11px; padding: 3px 9px; border-radius: 10px; font-weight: 500; white-space: nowrap; }
+  .badge.pending { background: #FAEEDA; color: #854F0B; }
+  .badge.approved { background: #EAF3DE; color: #3B6D11; }
+  .badge.review { background: #E6F1FB; color: #185FA5; }
+  .badge.rejected { background: #FCEBEB; color: #A32D2D; }
+  .badge.draft { background: #F1EFE8; color: #5F5E5A; }
+  .badge.received { background: #EAF3DE; color: #3B6D11; }
+  .badge.outstanding { background: #FAEEDA; color: #854F0B; }
+  .badge.active { background: #EAF3DE; color: #3B6D11; }
+  .badge.complete { background: #E6F1FB; color: #185FA5; }
+  .action-row { display: flex; gap: 6px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-row.full { grid-template-columns: 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-label { font-size: 12px; color: var(--color-text-secondary); }
+  .form-input { padding: 7px 10px; font-size: 13px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); font-family: var(--font-sans); }
+  .form-input:focus { outline: none; border-color: #1D9E75; box-shadow: 0 0 0 2px rgba(29,158,117,0.15); }
+  textarea.form-input { resize: vertical; }
+  .sov-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .sov-table th { background: var(--color-background-secondary); padding: 7px 10px; font-size: 11px; font-weight: 500; color: var(--color-text-secondary); border: 0.5px solid var(--color-border-tertiary); text-align: right; white-space: nowrap; }
+  .sov-table th:first-child, .sov-table th:nth-child(2) { text-align: left; }
+  .sov-table td { padding: 8px 10px; border: 0.5px solid var(--color-border-tertiary); text-align: right; color: var(--color-text-primary); }
+  .sov-table td:first-child, .sov-table td:nth-child(2) { text-align: left; }
+  .sov-table tr.total-row td { font-weight: 500; background: var(--color-background-secondary); }
+  .progress-bar { height: 4px; background: var(--color-background-secondary); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #1D9E75; border-radius: 2px; }
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: center; justify-content: center; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-secondary); width: 640px; max-height: 85vh; overflow-y: auto; padding: 24px; }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .modal-title { font-size: 16px; font-weight: 500; }
+  .modal-close { cursor: pointer; color: var(--color-text-secondary); font-size: 18px; background: none; border: none; line-height: 1; }
+  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 0.5px solid var(--color-border-tertiary); }
+  .sub-avatar { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; }
+  .divider { height: 0.5px; background: var(--color-border-tertiary); margin: 16px 0; }
+  .step-indicator { display: flex; align-items: center; margin-bottom: 20px; }
+  .step { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-tertiary); }
+  .step.done { color: #1D9E75; }
+  .step.active { color: var(--color-text-primary); font-weight: 500; }
+  .step-dot { width: 20px; height: 20px; border-radius: 50%; border: 0.5px solid var(--color-border-secondary); display: flex; align-items: center; justify-content: center; font-size: 10px; background: var(--color-background-secondary); }
+  .step.done .step-dot { background: #EAF3DE; border-color: #1D9E75; color: #1D9E75; }
+  .step.active .step-dot { background: #1D9E75; border-color: #1D9E75; color: #fff; }
+  .step-line { flex: 1; height: 0.5px; background: var(--color-border-tertiary); margin: 0 6px; }
+  .alert { padding: 10px 14px; border-radius: var(--border-radius-md); font-size: 13px; margin-bottom: 14px; }
+  .alert.info { background: #E6F1FB; color: #0C447C; border-left: 3px solid #185FA5; }
+  .alert.warning { background: #FAEEDA; color: #633806; border-left: 3px solid #EF9F27; }
+  .alert.success { background: #EAF3DE; color: #27500A; border-left: 3px solid #639922; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text"><i class="ti ti-building-warehouse" style="color:#1D9E75;margin-right:6px"></i>MSI Pay</div>
+      <div class="logo-sub">Miami Systems Inc.</div>
+    </div>
+    <div class="role-switcher">
+      <div class="role-label">Viewing as</div>
+      <select class="role-select" id="roleSelect" onchange="switchRole(this.value)">
+        <option value="gc">GC / Project Manager</option>
+        <option value="sub">Subcontractor</option>
+        <option value="owner">Owner / Developer</option>
+        <option value="accounting">Accounting / Finance</option>
+      </select>
+    </div>
+    <div class="nav" id="navMenu"></div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbarTitle">Invoice Dashboard</div>
+      <div id="topbarActions"></div>
+    </div>
+    <div class="content" id="mainContent"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+  <div class="modal" id="modalBody"></div>
+</div>
+
+<script>
+const state = {
+  role: 'gc', panel: 'dashboard',
+  invoices: [
+    { id:'INV-0041', sub:'Coastal Electric', trade:'Electrical', contract:'$184,000', billed:'$92,000', pct:50, status:'pending', period:'Apr 2026', project:'Palm Beach Warehouse Ph.1', lienStatus:'outstanding', draw:4 },
+    { id:'INV-0040', sub:'SunState Plumbing', trade:'Plumbing', contract:'$97,500', billed:'$29,250', pct:30, status:'review', period:'Apr 2026', project:'Palm Beach Warehouse Ph.1', lienStatus:'received', draw:4 },
+    { id:'INV-0039', sub:'Dade Drywall', trade:'Drywall', contract:'$62,000', billed:'$46,500', pct:75, status:'approved', period:'Mar 2026', project:'Palm Beach Warehouse Ph.1', lienStatus:'received', draw:3 },
+    { id:'INV-0038', sub:'Tropical HVAC', trade:'HVAC', contract:'$143,000', billed:'$57,200', pct:40, status:'approved', period:'Mar 2026', project:'Palm Beach Warehouse Ph.1', lienStatus:'received', draw:3 },
+    { id:'INV-0037', sub:'Coastal Electric', trade:'Electrical', contract:'$184,000', billed:'$55,200', pct:30, status:'approved', period:'Feb 2026', project:'Palm Beach Warehouse Ph.1', lienStatus:'received', draw:2 },
+    { id:'INV-0036', sub:'SunState Plumbing', trade:'Plumbing', contract:'$97,500', billed:'$9,750', pct:10, status:'rejected', period:'Feb 2026', project:'Palm Beach Warehouse Ph.1', lienStatus:'outstanding', draw:2 },
+  ],
+  subs: [
+    { name:'Coastal Electric', trade:'Electrical', contract:'$184,000', billed:'$147,200', pct:80, active:2, status:'active' },
+    { name:'SunState Plumbing', trade:'Plumbing', contract:'$97,500', billed:'$39,000', pct:40, active:1, status:'active' },
+    { name:'Dade Drywall', trade:'Drywall', contract:'$62,000', billed:'$46,500', pct:75, active:0, status:'active' },
+    { name:'Tropical HVAC', trade:'HVAC', contract:'$143,000', billed:'$57,200', pct:40, active:1, status:'active' },
+    { name:'Boca Concrete', trade:'Concrete', contract:'$88,000', billed:'$88,000', pct:100, active:0, status:'complete' },
+  ],
+  sov: [
+    { num:'01', desc:'Site Work & Mobilization', value:48000, prev:48000, curr:0, stored:0 },
+    { num:'02', desc:'Concrete Foundation', value:88000, prev:88000, curr:0, stored:0 },
+    { num:'03', desc:'Structural Steel', value:124000, prev:96000, curr:0, stored:0 },
+    { num:'04', desc:'Electrical Rough-In', value:92000, prev:55200, curr:36800, stored:0 },
+    { num:'05', desc:'Plumbing Rough-In', value:48750, prev:9750, curr:19500, stored:0 },
+    { num:'06', desc:'Drywall & Framing', value:62000, prev:31000, curr:15500, stored:0 },
+    { num:'07', desc:'HVAC Equipment', value:143000, prev:57200, curr:0, stored:0 },
+    { num:'08', desc:'Roofing', value:76000, prev:0, curr:0, stored:0 },
+    { num:'09', desc:'Finishes & Painting', value:41000, prev:0, curr:0, stored:0 },
+    { num:'10', desc:'Sitework & Paving', value:55000, prev:0, curr:0, stored:0 },
+  ]
+};
+
+const navConfig = {
+  gc: [
+    { id:'dashboard', icon:'ti-layout-dashboard', label:'Dashboard' },
+    { id:'invoices', icon:'ti-file-invoice', label:'Invoices', badge:2 },
+    { id:'sov', icon:'ti-table', label:'Schedule of Values' },
+    { id:'lienWaivers', icon:'ti-shield-check', label:'Lien Waivers', badge:1 },
+    { id:'subcontractors', icon:'ti-users', label:'Subcontractors' },
+  ],
+  sub: [
+    { id:'submitInvoice', icon:'ti-file-plus', label:'Submit Invoice' },
+    { id:'myInvoices', icon:'ti-file-invoice', label:'My Invoices' },
+    { id:'mySov', icon:'ti-table', label:'Schedule of Values' },
+    { id:'myLienWaivers', icon:'ti-shield-check', label:'Lien Waivers' },
+  ],
+  owner: [
+    { id:'ownerDashboard', icon:'ti-layout-dashboard', label:'Project Summary' },
+    { id:'ownerInvoices', icon:'ti-file-invoice', label:'Pay Applications' },
+    { id:'ownerSov', icon:'ti-table', label:'Schedule of Values' },
+  ],
+  accounting: [
+    { id:'accDashboard', icon:'ti-layout-dashboard', label:'Payables Dashboard' },
+    { id:'accInvoices', icon:'ti-file-invoice', label:'Approved Invoices' },
+    { id:'accLiens', icon:'ti-shield-check', label:'Lien Tracker' },
+  ]
+};
+
+const panelTitles = {
+  dashboard:'Invoice Dashboard', invoices:'Invoice Review', sov:'Schedule of Values', lienWaivers:'Lien Waiver Tracker', subcontractors:'Subcontractor Management',
+  submitInvoice:'Submit Pay Application', myInvoices:'My Invoices', mySov:'Schedule of Values', myLienWaivers:'My Lien Waivers',
+  ownerDashboard:'Project Summary', ownerInvoices:'Pay Applications', ownerSov:'Schedule of Values',
+  accDashboard:'Payables Dashboard', accInvoices:'Approved Invoices for Payment', accLiens:'Lien Waiver Tracker'
+};
+
+function switchRole(role) {
+  state.role = role;
+  state.panel = navConfig[role][0].id;
+  renderNav(); renderTopbar(); renderPanel();
+}
+function setPanel(id) {
+  state.panel = id;
+  renderNav(); renderTopbar(); renderPanel();
+}
+function renderNav() {
+  const nav = document.getElementById('navMenu');
+  nav.innerHTML = '<div class="nav-section">Navigation</div>' + navConfig[state.role].map(item =>
+    `<div class="nav-item ${state.panel===item.id?'active':''}" onclick="setPanel('${item.id}')">
+      <i class="ti ${item.icon}"></i>${item.label}
+      ${item.badge?`<span class="nav-badge">${item.badge}</span>`:''}
+    </div>`).join('');
+}
+function renderTopbar() {
+  document.getElementById('topbarTitle').textContent = panelTitles[state.panel] || '';
+  const btns = {
+    subcontractors:`<button class="btn primary sm" onclick="openAddSubModal()"><i class="ti ti-plus"></i> Add subcontractor</button>`,
+    lienWaivers:`<button class="btn sm"><i class="ti ti-download"></i> Export</button>`,
+    accLiens:`<button class="btn sm"><i class="ti ti-download"></i> Export</button>`,
+  };
+  document.getElementById('topbarActions').innerHTML = btns[state.panel] || '';
+}
+function fmt(n) { return '$' + Number(n).toLocaleString(); }
+function statusBadge(s) {
+  const labels = { pending:'Pending Review', review:'In Review', approved:'Approved', rejected:'Rejected', draft:'Draft', received:'Received', outstanding:'Outstanding', active:'Active', complete:'Complete' };
+  return `<span class="badge ${s}">${labels[s]||s}</span>`;
+}
+function renderPanel() {
+  const el = document.getElementById('mainContent');
+  const p = state.panel;
+  const map = { dashboard:renderGCDashboard, invoices:renderInvoices, sov:renderSOV, lienWaivers:renderLienWaivers, subcontractors:renderSubcontractors, submitInvoice:renderSubmitInvoice, myInvoices:renderMyInvoices, mySov:renderSOV, myLienWaivers:renderMyLienWaivers, ownerDashboard:renderOwnerDashboard, ownerInvoices:renderOwnerInvoices, ownerSov:renderSOV, accDashboard:renderAccDashboard, accInvoices:renderAccDashboard, accLiens:renderLienWaivers };
+  el.innerHTML = (map[p] || (() => ''))();
+}
+function renderGCDashboard() {
+  const pending = state.invoices.filter(i=>i.status==='pending'||i.status==='review');
+  const lienOut = state.invoices.filter(i=>i.lienStatus==='outstanding').length;
+  return `
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Total contract value</div><div class="metric-value">$572K</div><div class="metric-sub">Palm Beach Warehouse Ph.1</div></div>
+    <div class="metric"><div class="metric-label">Billed to date</div><div class="metric-value">$331K</div><div class="metric-sub">58% of contract</div></div>
+    <div class="metric"><div class="metric-label">Pending invoices</div><div class="metric-value">${pending.length}</div><div class="metric-sub">Awaiting action</div></div>
+    <div class="metric"><div class="metric-label">Lien waivers outstanding</div><div class="metric-value">${lienOut}</div><div class="metric-sub">Require follow-up</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Overall project completion</div><span style="font-size:12px;color:var(--color-text-secondary)">Draw 4 — April 2026</span></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="progress-bar" style="flex:1;height:8px"><div class="progress-fill" style="width:58%"></div></div>
+      <span style="font-size:13px;font-weight:500">58%</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Invoices awaiting review</div><button class="btn sm" onclick="setPanel('invoices')">View all</button></div>
+    <div class="table-wrap"><table>
+      <tr><th>Invoice</th><th>Subcontractor</th><th>Trade</th><th>Amount</th><th>Status</th><th>Action</th></tr>
+      ${pending.map(inv=>`<tr>
+        <td style="font-weight:500">${inv.id}</td><td>${inv.sub}</td><td style="color:var(--color-text-secondary)">${inv.trade}</td>
+        <td style="font-weight:500">${inv.billed}</td><td>${statusBadge(inv.status)}</td>
+        <td><button class="btn sm primary" onclick="openApproveModal('${inv.id}')">Review</button></td>
+      </tr>`).join('')}
+    </table></div>
+  </div>`;
+}
+function renderInvoices() {
+  return `
+  <div class="alert info"><i class="ti ti-info-circle" style="margin-right:6px"></i><strong>2 invoices</strong> require your review before the Draw 4 payment window closes.</div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">All invoices — Draw 4 · Palm Beach Warehouse</div></div>
+    <div class="table-wrap"><table>
+      <tr><th>Invoice #</th><th>Subcontractor</th><th>Trade</th><th>Period</th><th>Contract</th><th>This draw</th><th>% Comp.</th><th>Lien waiver</th><th>Status</th><th>Action</th></tr>
+      ${state.invoices.map(inv=>`<tr>
+        <td style="font-weight:500;font-family:var(--font-mono);font-size:12px">${inv.id}</td>
+        <td>${inv.sub}</td><td style="color:var(--color-text-secondary)">${inv.trade}</td><td style="color:var(--color-text-secondary)">${inv.period}</td>
+        <td>${inv.contract}</td><td style="font-weight:500">${inv.billed}</td>
+        <td><div style="display:flex;align-items:center;gap:6px"><div class="progress-bar" style="width:60px"><div class="progress-fill" style="width:${inv.pct}%"></div></div><span style="font-size:11px;color:var(--color-text-secondary)">${inv.pct}%</span></div></td>
+        <td>${statusBadge(inv.lienStatus)}</td><td>${statusBadge(inv.status)}</td>
+        <td>${inv.status==='pending'||inv.status==='review'?`<button class="btn sm primary" onclick="openApproveModal('${inv.id}')">Review</button>`:`<button class="btn sm" onclick="openDetailModal('${inv.id}')">View</button>`}</td>
+      </tr>`).join('')}
+    </table></div>
+  </div>`;
+}
+function renderSOV() {
+  const tv=state.sov.reduce((a,r)=>a+r.value,0), tp=state.sov.reduce((a,r)=>a+r.prev,0), tc=state.sov.reduce((a,r)=>a+r.curr,0);
+  const total=tp+tc, ret=Math.round(total*0.10);
+  return `
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:14px 20px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between">
+      <div class="card-title">AIA G702/G703 — Schedule of Values</div>
+      <div style="font-size:12px;color:var(--color-text-secondary)">Palm Beach Warehouse Ph.1 · Draw 4 · April 2026</div>
+    </div>
+    <div class="table-wrap">
+    <table class="sov-table">
+      <tr><th style="width:36px">#</th><th>Description</th><th>Scheduled value</th><th>Prev. completed</th><th>This period</th><th>Stored</th><th>Total completed</th><th>% Complete</th><th>Balance</th></tr>
+      ${state.sov.map(r=>{const comp=r.prev+r.curr+r.stored,pct=Math.round(comp/r.value*100);return`<tr>
+        <td>${r.num}</td><td style="text-align:left">${r.desc}</td><td>${fmt(r.value)}</td><td>${fmt(r.prev)}</td>
+        <td>${r.curr>0?`<span style="color:#1D9E75;font-weight:500">${fmt(r.curr)}</span>`:fmt(r.curr)}</td>
+        <td>${fmt(r.stored)}</td><td>${fmt(comp)}</td>
+        <td><div style="display:flex;align-items:center;gap:4px"><div class="progress-bar" style="width:50px"><div class="progress-fill" style="width:${pct}%"></div></div><span style="font-size:11px">${pct}%</span></div></td>
+        <td>${fmt(r.value-comp)}</td>
+      </tr>`}).join('')}
+      <tr class="total-row"><td colspan="2">Totals</td><td>${fmt(tv)}</td><td>${fmt(tp)}</td><td>${fmt(tc)}</td><td>$0</td><td>${fmt(total)}</td><td>${Math.round(total/tv*100)}%</td><td>${fmt(tv-total)}</td></tr>
+    </table>
+    </div>
+    <div style="padding:14px 20px;border-top:0.5px solid var(--color-border-tertiary);display:flex;gap:24px">
+      <div><span style="font-size:12px;color:var(--color-text-secondary)">Retainage (10%): </span><span style="font-size:13px;font-weight:500">${fmt(ret)}</span></div>
+      <div><span style="font-size:12px;color:var(--color-text-secondary)">Net payment due: </span><span style="font-size:13px;font-weight:500;color:#1D9E75">${fmt(tc-ret)}</span></div>
+    </div>
+  </div>`;
+}
+function renderLienWaivers() {
+  const waivers=[
+    {sub:'Coastal Electric',draw:3,type:'Conditional',amount:'$55,200',status:'received',date:'Mar 28, 2026'},
+    {sub:'Dade Drywall',draw:3,type:'Conditional',amount:'$15,500',status:'received',date:'Mar 28, 2026'},
+    {sub:'Tropical HVAC',draw:3,type:'Conditional',amount:'$57,200',status:'received',date:'Mar 29, 2026'},
+    {sub:'SunState Plumbing',draw:3,type:'Conditional',amount:'$19,500',status:'received',date:'Mar 28, 2026'},
+    {sub:'Coastal Electric',draw:4,type:'Conditional',amount:'$92,000',status:'outstanding',date:'—'},
+    {sub:'SunState Plumbing',draw:2,type:'Unconditional',amount:'$9,750',status:'outstanding',date:'—'},
+    {sub:'Boca Concrete',draw:1,type:'Unconditional',amount:'$88,000',status:'received',date:'Jan 15, 2026'},
+  ];
+  const out=waivers.filter(w=>w.status==='outstanding').length;
+  return `
+  <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
+    <div class="metric"><div class="metric-label">Waivers received</div><div class="metric-value">${waivers.filter(w=>w.status==='received').length}</div></div>
+    <div class="metric"><div class="metric-label">Outstanding</div><div class="metric-value" style="color:#E24B4A">${out}</div></div>
+    <div class="metric"><div class="metric-label">Payment holds</div><div class="metric-value" style="font-size:14px">2 subs</div><div class="metric-sub">Blocked pending waiver</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Lien waiver log</div></div>
+    <div class="table-wrap"><table>
+      <tr><th>Subcontractor</th><th>Draw</th><th>Type</th><th>Amount</th><th>Date received</th><th>Status</th><th>Action</th></tr>
+      ${waivers.map(w=>`<tr>
+        <td>${w.sub}</td><td style="color:var(--color-text-secondary)">Draw ${w.draw}</td><td style="color:var(--color-text-secondary)">${w.type}</td>
+        <td style="font-weight:500">${w.amount}</td><td style="color:var(--color-text-secondary);font-size:12px">${w.date}</td>
+        <td>${statusBadge(w.status)}</td>
+        <td>${w.status==='outstanding'?`<button class="btn sm" onclick="alert('Reminder sent to ${w.sub}')"><i class="ti ti-send"></i> Remind</button>`:`<button class="btn sm"><i class="ti ti-eye"></i> View</button>`}</td>
+      </tr>`).join('')}
+    </table></div>
+  </div>`;
+}
+function renderSubcontractors() {
+  return `
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Active subs</div><div class="metric-value">4</div></div>
+    <div class="metric"><div class="metric-label">Completed</div><div class="metric-value">1</div></div>
+    <div class="metric"><div class="metric-label">Total contracted</div><div class="metric-value" style="font-size:16px">$574.5K</div></div>
+    <div class="metric"><div class="metric-label">Invoiced to date</div><div class="metric-value" style="font-size:16px">$377.9K</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Subcontractor roster</div></div>
+    <div class="table-wrap"><table>
+      <tr><th>Company</th><th>Trade</th><th>Contract</th><th>Billed</th><th>Progress</th><th>Active inv.</th><th>Status</th><th></th></tr>
+      ${state.subs.map(s=>`<tr>
+        <td><div style="display:flex;align-items:center;gap:8px">
+          <div class="sub-avatar" style="background:#E1F5EE;color:#0F6E56">${s.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+          <span style="font-weight:500">${s.name}</span>
+        </div></td>
+        <td style="color:var(--color-text-secondary)">${s.trade}</td><td>${s.contract}</td><td>${s.billed}</td>
+        <td><div style="display:flex;align-items:center;gap:6px"><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:${s.pct}%"></div></div><span style="font-size:11px;color:var(--color-text-secondary)">${s.pct}%</span></div></td>
+        <td style="text-align:center">${s.active}</td><td>${statusBadge(s.status)}</td>
+        <td><button class="btn sm">Details</button></td>
+      </tr>`).join('')}
+    </table></div>
+  </div>`;
+}
+function renderSubmitInvoice() {
+  return `<div style="max-width:680px">
+  <div class="step-indicator">
+    <div class="step done"><div class="step-dot"><i class="ti ti-check" style="font-size:10px"></i></div>Contract info</div>
+    <div class="step-line"></div>
+    <div class="step active"><div class="step-dot">2</div>Line items</div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-dot">3</div>Lien waiver</div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-dot">4</div>Submit</div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Pay application — Draw 4</div></div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Project</div><input class="form-input" value="Palm Beach Warehouse Ph.1" readonly></div>
+      <div class="form-group"><div class="form-label">Application #</div><input class="form-input" value="4" readonly></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Period from</div><input class="form-input" type="date" value="2026-04-01"></div>
+      <div class="form-group"><div class="form-label">Period to</div><input class="form-input" type="date" value="2026-04-30"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="card-title" style="margin-bottom:12px">Schedule of values — this draw</div>
+    <table class="sov-table">
+      <tr><th>#</th><th>Description</th><th>Contract value</th><th>Prev. completed</th><th>This period</th><th>Total</th><th>%</th></tr>
+      <tr><td>01</td><td style="text-align:left">Electrical rough-in</td><td>$92,000</td><td>$55,200</td><td><input class="form-input" style="width:90px;padding:4px 6px;font-size:12px" value="36,800"></td><td style="color:#1D9E75;font-weight:500">$92,000</td><td>100%</td></tr>
+      <tr><td>02</td><td style="text-align:left">Panel installation</td><td>$52,000</td><td>$0</td><td><input class="form-input" style="width:90px;padding:4px 6px;font-size:12px" value="0"></td><td>$0</td><td>0%</td></tr>
+      <tr><td>03</td><td style="text-align:left">Final trim & devices</td><td>$40,000</td><td>$0</td><td><input class="form-input" style="width:90px;padding:4px 6px;font-size:12px" value="0"></td><td>$0</td><td>0%</td></tr>
+      <tr class="total-row"><td colspan="4">This draw total</td><td style="color:#1D9E75;font-weight:500">$36,800</td><td colspan="2"></td></tr>
+    </table>
+    <div class="divider"></div>
+    <div class="form-row full"><div class="form-group"><div class="form-label">Notes</div><textarea class="form-input" rows="3" placeholder="Describe scope completed, attach backup..."></textarea></div></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn">Save draft</button>
+      <button class="btn primary" onclick="alert('Invoice saved and submitted for GC review!')">Next: attach lien waiver →</button>
+    </div>
+  </div></div>`;
+}
+function renderMyInvoices() {
+  const myInvs=state.invoices.filter(i=>i.sub==='Coastal Electric');
+  return `
+  <div class="alert success"><i class="ti ti-circle-check" style="margin-right:6px"></i>INV-0039 was approved Mar 30. Payment expected within 5 business days.</div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Coastal Electric — invoice history</div><button class="btn primary sm" onclick="setPanel('submitInvoice')"><i class="ti ti-plus"></i> New application</button></div>
+    <div class="table-wrap"><table>
+      <tr><th>Invoice</th><th>Draw</th><th>Period</th><th>Amount</th><th>% Complete</th><th>Lien waiver</th><th>Status</th></tr>
+      ${myInvs.map(inv=>`<tr>
+        <td style="font-weight:500;font-family:var(--font-mono);font-size:12px">${inv.id}</td>
+        <td>Draw ${inv.draw}</td><td>${inv.period}</td><td style="font-weight:500">${inv.billed}</td>
+        <td>${inv.pct}%</td><td>${statusBadge(inv.lienStatus)}</td><td>${statusBadge(inv.status)}</td>
+      </tr>`).join('')}
+    </table></div>
+  </div>`;
+}
+function renderMyLienWaivers() {
+  return `<div class="card">
+    <div class="card-header"><div class="card-title">Lien waivers — Coastal Electric</div><button class="btn primary sm"><i class="ti ti-upload"></i> Upload waiver</button></div>
+    <div class="alert warning">Draw 4 conditional lien waiver required before payment is released.</div>
+    <div class="table-wrap"><table>
+      <tr><th>Draw</th><th>Type</th><th>Amount</th><th>Status</th><th>Date</th><th></th></tr>
+      <tr><td>Draw 4</td><td>Conditional</td><td>$92,000</td><td>${statusBadge('outstanding')}</td><td>—</td><td><button class="btn primary sm" onclick="alert('Upload lien waiver PDF')"><i class="ti ti-upload"></i> Upload</button></td></tr>
+      <tr><td>Draw 3</td><td>Conditional</td><td>$55,200</td><td>${statusBadge('received')}</td><td>Mar 28, 2026</td><td><button class="btn sm"><i class="ti ti-eye"></i> View</button></td></tr>
+      <tr><td>Draw 2</td><td>Conditional</td><td>$37,000</td><td>${statusBadge('received')}</td><td>Feb 14, 2026</td><td><button class="btn sm"><i class="ti ti-eye"></i> View</button></td></tr>
+    </table></div>
+  </div>`;
+}
+function renderOwnerDashboard() {
+  return `
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Total project budget</div><div class="metric-value">$572K</div></div>
+    <div class="metric"><div class="metric-label">Approved & paid</div><div class="metric-value">$245K</div><div class="metric-sub">Draws 1–3 certified</div></div>
+    <div class="metric"><div class="metric-label">Pending draw 4</div><div class="metric-value">$148K</div><div class="metric-sub">Awaiting GC cert.</div></div>
+    <div class="metric"><div class="metric-label">Retainage held</div><div class="metric-value">$33K</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Project milestone progress</div></div>
+    ${[['Site work & concrete','100%'],['Structural steel','77%'],['MEP rough-in','51%'],['Drywall & envelope','75%'],['Finishes & closeout','0%']].map(([label,pct])=>`
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${label}</span><span style="color:var(--color-text-secondary)">${pct}</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}"></div></div>
+      </div>`).join('')}
+  </div>`;
+}
+function renderOwnerInvoices() {
+  const cert=state.invoices.filter(i=>i.status==='approved');
+  return `<div class="card">
+    <div class="card-header"><div class="card-title">Certified pay applications</div></div>
+    <div class="table-wrap"><table>
+      <tr><th>Invoice</th><th>Subcontractor</th><th>Draw</th><th>Certified amount</th><th>Retainage</th><th>Net due</th><th>Status</th></tr>
+      ${cert.map(inv=>{const amt=parseFloat(inv.billed.replace(/[$,]/g,'')),ret=Math.round(amt*0.10);return`<tr>
+        <td style="font-weight:500">${inv.id}</td><td>${inv.sub}</td><td>Draw ${inv.draw}</td>
+        <td>${inv.billed}</td><td style="color:#854F0B">${fmt(ret)}</td>
+        <td style="font-weight:500;color:#1D9E75">${fmt(amt-ret)}</td><td>${statusBadge(inv.status)}</td>
+      </tr>`}).join('')}
+    </table></div>
+  </div>`;
+}
+function renderAccDashboard() {
+  return `
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Ready to pay</div><div class="metric-value">4</div><div class="metric-sub">Approved, lien waiver on file</div></div>
+    <div class="metric"><div class="metric-label">Total payable</div><div class="metric-value" style="font-size:16px">$163K</div></div>
+    <div class="metric"><div class="metric-label">Held — lien waiver</div><div class="metric-value">2</div></div>
+    <div class="metric"><div class="metric-label">Retainage withheld</div><div class="metric-value" style="font-size:16px">$16.3K</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Payment queue</div></div>
+    <div class="table-wrap"><table>
+      <tr><th>Invoice</th><th>Payee</th><th>Gross</th><th>Retainage</th><th>Net payment</th><th>Lien waiver</th><th>Release</th></tr>
+      ${state.invoices.filter(i=>i.status==='approved').map(inv=>{
+        const amt=parseFloat(inv.billed.replace(/[$,]/g,'')),ret=Math.round(amt*0.10);
+        return`<tr>
+          <td style="font-weight:500;font-size:12px;font-family:var(--font-mono)">${inv.id}</td><td>${inv.sub}</td>
+          <td>${inv.billed}</td><td style="color:#854F0B">${fmt(ret)}</td>
+          <td style="font-weight:500;color:#1D9E75">${fmt(amt-ret)}</td>
+          <td>${statusBadge(inv.lienStatus)}</td>
+          <td>${inv.lienStatus==='received'?`<button class="btn primary sm" onclick="alert('Mark ${inv.id} as paid')">Release payment</button>`:`<span style="font-size:12px;color:var(--color-text-tertiary)">Blocked</span>`}</td>
+        </tr>`;
+      }).join('')}
+    </table></div>
+  </div>`;
+}
+function openApproveModal(id) {
+  const inv=state.invoices.find(i=>i.id===id); if(!inv) return;
+  document.getElementById('modalBody').innerHTML=`
+    <div class="modal-header"><div class="modal-title">Review — ${inv.id}</div><button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+      <div><div class="form-label">Subcontractor</div><div style="font-size:13px;font-weight:500;margin-top:2px">${inv.sub}</div></div>
+      <div><div class="form-label">Trade</div><div style="font-size:13px;margin-top:2px">${inv.trade}</div></div>
+      <div><div class="form-label">Amount</div><div style="font-size:13px;font-weight:500;color:#1D9E75;margin-top:2px">${inv.billed}</div></div>
+    </div>
+    <div class="divider"></div>
+    <div style="margin-bottom:12px">
+      <div class="form-label" style="margin-bottom:6px">Validation checklist</div>
+      ${[['Backup documentation attached',true],['SOV line items match contract',true],['Lien waiver on file',inv.lienStatus==='received'],['Inspector sign-off received',true],['Retainage calculation correct',true]].map(([label,ok])=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary)">
+          <i class="ti ${ok?'ti-circle-check':'ti-circle-x'}" style="color:${ok?'#639922':'#E24B4A'};font-size:16px"></i>
+          <span style="font-size:13px">${label}</span>
+          ${!ok?`<span class="badge outstanding" style="margin-left:auto">Action needed</span>`:''}
+        </div>`).join('')}
+    </div>
+    ${inv.lienStatus!=='received'?`<div class="alert warning"><i class="ti ti-alert-triangle" style="margin-right:6px"></i>Lien waiver outstanding — approval will be conditional.</div>`:''}
+    <div class="form-group" style="margin-top:12px"><div class="form-label">GC review notes</div><textarea class="form-input" rows="2" placeholder="Add notes or conditions..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn danger" onclick="rejectInvoice('${id}')"><i class="ti ti-x"></i> Reject</button>
+      <button class="btn primary" onclick="approveInvoice('${id}')"><i class="ti ti-check"></i> Approve</button>
+    </div>`;
+  document.getElementById('modalBackdrop').classList.add('open');
+}
+function openDetailModal(id) {
+  const inv=state.invoices.find(i=>i.id===id);
+  document.getElementById('modalBody').innerHTML=`
+    <div class="modal-header"><div class="modal-title">Invoice — ${inv.id}</div><button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div><div class="form-label">Subcontractor</div><div style="font-size:13px;font-weight:500;margin-top:2px">${inv.sub}</div></div>
+      <div><div class="form-label">Status</div><div style="margin-top:2px">${statusBadge(inv.status)}</div></div>
+      <div><div class="form-label">Amount</div><div style="font-size:16px;font-weight:500;color:#1D9E75;margin-top:2px">${inv.billed}</div></div>
+      <div><div class="form-label">% Complete</div><div style="font-size:13px;margin-top:2px">${inv.pct}%</div></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">Close</button></div>`;
+  document.getElementById('modalBackdrop').classList.add('open');
+}
+function approveInvoice(id) {
+  const inv=state.invoices.find(i=>i.id===id); if(inv) inv.status='approved';
+  closeModal(); renderPanel();
+}
+function rejectInvoice(id) {
+  const inv=state.invoices.find(i=>i.id===id); if(inv) inv.status='rejected';
+  closeModal(); renderPanel();
+}
+function closeModal(e) {
+  if(e && e.target!==document.getElementById('modalBackdrop')) return;
+  document.getElementById('modalBackdrop').classList.remove('open');
+}
+function openAddSubModal() {
+  document.getElementById('modalBody').innerHTML=`
+    <div class="modal-header"><div class="modal-title">Add subcontractor</div><button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button></div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Company name</div><input class="form-input" placeholder="e.g. South Florida Roofing LLC"></div>
+      <div class="form-group"><div class="form-label">Trade</div><input class="form-input" placeholder="e.g. Roofing"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Primary contact</div><input class="form-input" placeholder="Name"></div>
+      <div class="form-group"><div class="form-label">Email</div><input class="form-input" type="email" placeholder="contact@company.com"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Contract value</div><input class="form-input" placeholder="$0.00"></div>
+      <div class="form-group"><div class="form-label">FL license #</div><input class="form-input" placeholder="CCC-000000"></div>
+    </div>
+    <div class="form-group" style="margin-top:4px"><div class="form-label">Scope of work</div><textarea class="form-input" rows="2" placeholder="Brief description..."></textarea></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="closeModal()">Add subcontractor</button></div>`;
+  document.getElementById('modalBackdrop').classList.add('open');
+}
+renderNav(); renderTopbar(); renderPanel();
+</script>
+</body>
+</html>
