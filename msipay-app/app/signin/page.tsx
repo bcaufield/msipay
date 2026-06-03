@@ -1,7 +1,7 @@
 import { Warehouse } from "lucide-react";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
-import { signIn } from "@/auth";
+import { auth, signIn } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +11,13 @@ export default async function SignInPage({
   searchParams: Promise<{ error?: string; sent?: string }>;
 }) {
   const { error, sent } = await searchParams;
+
+  // Already signed in? Send them into the app. This also rescues anyone who
+  // lands on /signin via an older magic link whose callback pointed here.
+  const session = await auth();
+  if (session?.user) {
+    redirect("/");
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-5 bg-bg-secondary">
@@ -41,7 +48,7 @@ export default async function SignInPage({
             "use server";
             const email = String(formData.get("email") ?? "").trim();
             try {
-              await signIn("resend", { email, redirect: false });
+              await signIn("resend", { email, redirectTo: "/", redirect: false });
             } catch (err) {
               if (!(err instanceof AuthError && err.type === "AccessDenied")) {
                 throw err;
