@@ -25,6 +25,11 @@ export const waiverTypeEnum = pgEnum("waiver_type", [
   "Conditional",
   "Unconditional",
 ]);
+export const inviteStatusEnum = pgEnum("invite_status", [
+  "pending",
+  "accepted",
+  "revoked",
+]);
 
 // --- Auth.js tables (Drizzle adapter) --------------------------------------
 
@@ -78,6 +83,21 @@ export const verificationTokens = pgTable(
   },
   (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })],
 );
+
+// Invite-only access control. A person may sign in only if they already have a
+// user row or a pending invitation. On first sign-in the invited role is copied
+// onto their new user row and the invite is marked accepted (see auth.ts).
+export const invitations = pgTable("invitation", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  email: text("email").notNull().unique(),
+  role: roleEnum("role").notNull(),
+  status: inviteStatusEnum("status").notNull().default("pending"),
+  invitedByEmail: text("invited_by_email"),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  acceptedAt: timestamp("accepted_at", { mode: "date" }),
+});
 
 // --- Domain tables ---------------------------------------------------------
 // All monetary values are stored as integer cents — never dollars as floats.

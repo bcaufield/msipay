@@ -1,4 +1,6 @@
 import { Warehouse } from "lucide-react";
+import { AuthError } from "next-auth";
+import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 
 export const dynamic = "force-dynamic";
@@ -6,9 +8,9 @@ export const dynamic = "force-dynamic";
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; sent?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, sent } = await searchParams;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-5 bg-bg-secondary">
@@ -27,11 +29,27 @@ export default async function SignInPage({
           </div>
         ) : null}
 
+        {sent ? (
+          <div className="alert alert-success mb-3 text-xs">
+            If your email is on the invite list, a one-time sign-in link is on
+            its way. Check your inbox.
+          </div>
+        ) : null}
+
         <form
           action={async (formData: FormData) => {
             "use server";
             const email = String(formData.get("email") ?? "").trim();
-            await signIn("resend", { email, redirectTo: "/" });
+            try {
+              await signIn("resend", { email, redirect: false });
+            } catch (err) {
+              if (!(err instanceof AuthError && err.type === "AccessDenied")) {
+                throw err;
+              }
+            }
+            // Same neutral response whether or not the email is invited, so the
+            // form never reveals which addresses have access.
+            redirect("/signin?sent=1");
           }}
         >
           <label className="text-xs text-fg-secondary" htmlFor="email">
