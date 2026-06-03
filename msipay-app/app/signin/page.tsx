@@ -31,8 +31,8 @@ export default async function SignInPage({
 
         {sent ? (
           <div className="alert alert-success mb-3 text-xs">
-            If your email is on the invite list, a one-time sign-in link is on
-            its way. Check your inbox.
+            If your email has access, a one-time sign-in link is on its way.
+            Check your inbox.
           </div>
         ) : null}
 
