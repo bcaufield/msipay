@@ -1,8 +1,9 @@
 import { Info } from "lucide-react";
-import { invoices } from "@/lib/data";
+import { getInvoices } from "@/lib/data";
 import { StatusBadge } from "@/components/badge";
 
-export function GCInvoices() {
+export async function GCInvoices() {
+  const invoices = await getInvoices();
   return (
     <div>
       <div className="alert alert-info flex items-center gap-1.5">

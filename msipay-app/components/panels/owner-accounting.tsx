@@ -1,4 +1,4 @@
-import { invoices, fmt } from "@/lib/data";
+import { getInvoices, fmt } from "@/lib/data";
 import { StatusBadge } from "@/components/badge";
 import { Metric } from "./gc-dashboard";
 
@@ -38,7 +38,8 @@ export function OwnerDashboard() {
   );
 }
 
-export function OwnerInvoices() {
+export async function OwnerInvoices() {
+  const invoices = await getInvoices();
   const cert = invoices.filter((i) => i.status === "approved");
   return (
     <div className="card">
@@ -76,7 +77,8 @@ export function OwnerInvoices() {
   );
 }
 
-export function AccountingDashboard() {
+export async function AccountingDashboard() {
+  const invoices = await getInvoices();
   return (
     <div>
       <div className="grid grid-cols-4 gap-3 mb-4">

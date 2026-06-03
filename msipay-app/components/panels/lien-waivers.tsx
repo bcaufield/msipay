@@ -1,9 +1,10 @@
 import { Send, Eye } from "lucide-react";
-import { waivers } from "@/lib/data";
+import { getWaivers } from "@/lib/data";
 import { StatusBadge } from "@/components/badge";
 import { Metric } from "./gc-dashboard";
 
-export function LienWaivers() {
+export async function LienWaivers() {
+  const waivers = await getWaivers();
   const received = waivers.filter((w) => w.status === "received").length;
   const outstanding = waivers.filter((w) => w.status === "outstanding").length;
   return (

@@ -1,5 +1,5 @@
 import { Check, Plus, Upload, Eye, CircleCheck } from "lucide-react";
-import { invoices } from "@/lib/data";
+import { getInvoices } from "@/lib/data";
 import { StatusBadge } from "@/components/badge";
 
 export function SubmitInvoice() {
@@ -103,7 +103,8 @@ function Divider() {
   return <div className="h-px bg-border-subtle my-4" />;
 }
 
-export function SubInvoices() {
+export async function SubInvoices() {
+  const invoices = await getInvoices();
   const mine = invoices.filter((i) => i.sub === "Coastal Electric");
   return (
     <div>
