@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { invoices } from "@/lib/data";
+import { getInvoices } from "@/lib/data";
 import { StatusBadge } from "@/components/badge";
 
-export function GCDashboard() {
+export async function GCDashboard() {
+  const invoices = await getInvoices();
   const pending = invoices.filter((i) => i.status === "pending" || i.status === "review");
   const lienOut = invoices.filter((i) => i.lienStatus === "outstanding").length;
   return (

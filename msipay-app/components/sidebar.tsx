@@ -4,13 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Warehouse } from "lucide-react";
 import * as Icons from "lucide-react";
-import { navConfig, isRole, type Role } from "@/lib/nav";
-import { RoleSwitcher } from "./role-switcher";
+import { navConfig, type Role } from "@/lib/nav";
+import { UserMenu } from "./user-menu";
 
-export function Sidebar() {
+export function Sidebar({ role, userEmail }: { role: Role; userEmail: string }) {
   const pathname = usePathname();
-  const [, roleSeg, panelSeg = ""] = pathname.split("/");
-  const role: Role = isRole(roleSeg) ? roleSeg : "gc";
+  const [, , panelSeg = ""] = pathname.split("/");
   const panel = panelSeg;
   return (
     <aside className="w-[220px] flex-shrink-0 bg-bg-primary border-r border-border-subtle flex flex-col">
@@ -23,7 +22,7 @@ export function Sidebar() {
           Miami Systems Inc.
         </div>
       </div>
-      <RoleSwitcher />
+      <UserMenu role={role} userEmail={userEmail} />
       <nav className="flex-1 py-2 overflow-y-auto">
         <div className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-wider text-fg-tertiary">
           Navigation

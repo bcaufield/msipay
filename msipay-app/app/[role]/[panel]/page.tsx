@@ -12,9 +12,12 @@ import {
   AccountingDashboard,
 } from "@/components/panels/owner-accounting";
 
-type PanelKey = `${string}/${string}`;
+export const dynamic = "force-dynamic";
 
-const registry: Record<PanelKey, React.ComponentType> = {
+type PanelKey = `${string}/${string}`;
+type PanelComponent = () => React.ReactNode | Promise<React.ReactNode>;
+
+const registry: Record<PanelKey, PanelComponent> = {
   "gc/dashboard": GCDashboard,
   "gc/invoices": GCInvoices,
   "gc/sov": SOV,

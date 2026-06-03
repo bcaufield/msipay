@@ -1,6 +1,7 @@
-import { sov, fmt } from "@/lib/data";
+import { getSov, fmt } from "@/lib/data";
 
-export function SOV() {
+export async function SOV() {
+  const sov = await getSov();
   const tv = sov.reduce((a, r) => a + r.value, 0);
   const tp = sov.reduce((a, r) => a + r.prev, 0);
   const tc = sov.reduce((a, r) => a + r.curr, 0);

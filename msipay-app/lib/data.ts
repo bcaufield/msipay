@@ -1,5 +1,16 @@
-// Mock data — ported verbatim from prototype-MSIpay.html.
-// Replace with real Postgres-backed queries in production.
+// Data-access layer. Each export reads from Postgres via Drizzle and maps rows
+// back to the shapes the panels render. Monetary columns are integer cents in
+// the DB and are converted to dollars / display strings here.
+
+import { eq, asc, desc } from "drizzle-orm";
+import { db } from "./db";
+import {
+  invoices as invoicesTable,
+  subcontractors as subsTable,
+  sovLines as sovTable,
+  waivers as waiversTable,
+  projects as projectsTable,
+} from "./schema";
 
 export type InvoiceStatus = "pending" | "review" | "approved" | "rejected" | "draft";
 export type LienStatus = "received" | "outstanding";
@@ -47,45 +58,100 @@ export type Waiver = {
   date: string;
 };
 
-export const invoices: Invoice[] = [
-  { id: "INV-0041", sub: "Coastal Electric",   trade: "Electrical", contract: "$184,000", billed: "$92,000", pct: 50, status: "pending",  period: "Apr 2026", project: "Palm Beach Warehouse Ph.1", lienStatus: "outstanding", draw: 4 },
-  { id: "INV-0040", sub: "SunState Plumbing",  trade: "Plumbing",   contract: "$97,500",  billed: "$29,250", pct: 30, status: "review",   period: "Apr 2026", project: "Palm Beach Warehouse Ph.1", lienStatus: "received",    draw: 4 },
-  { id: "INV-0039", sub: "Dade Drywall",       trade: "Drywall",    contract: "$62,000",  billed: "$46,500", pct: 75, status: "approved", period: "Mar 2026", project: "Palm Beach Warehouse Ph.1", lienStatus: "received",    draw: 3 },
-  { id: "INV-0038", sub: "Tropical HVAC",      trade: "HVAC",       contract: "$143,000", billed: "$57,200", pct: 40, status: "approved", period: "Mar 2026", project: "Palm Beach Warehouse Ph.1", lienStatus: "received",    draw: 3 },
-  { id: "INV-0037", sub: "Coastal Electric",   trade: "Electrical", contract: "$184,000", billed: "$55,200", pct: 30, status: "approved", period: "Feb 2026", project: "Palm Beach Warehouse Ph.1", lienStatus: "received",    draw: 2 },
-  { id: "INV-0036", sub: "SunState Plumbing",  trade: "Plumbing",   contract: "$97,500",  billed: "$9,750",  pct: 10, status: "rejected", period: "Feb 2026", project: "Palm Beach Warehouse Ph.1", lienStatus: "outstanding", draw: 2 },
-];
+// Cents (integer) → "$1,234" display string.
+const centsToStr = (cents: number) => "$" + Math.round(cents / 100).toLocaleString();
+// Cents (integer) → whole-dollar number for arithmetic in the SOV table.
+const centsToDollars = (cents: number) => Math.round(cents / 100);
 
-export const subs: Subcontractor[] = [
-  { name: "Coastal Electric",   trade: "Electrical", contract: "$184,000", billed: "$147,200", pct: 80,  active: 2, status: "active" },
-  { name: "SunState Plumbing",  trade: "Plumbing",   contract: "$97,500",  billed: "$39,000",  pct: 40,  active: 1, status: "active" },
-  { name: "Dade Drywall",       trade: "Drywall",    contract: "$62,000",  billed: "$46,500",  pct: 75,  active: 0, status: "active" },
-  { name: "Tropical HVAC",      trade: "HVAC",       contract: "$143,000", billed: "$57,200",  pct: 40,  active: 1, status: "active" },
-  { name: "Boca Concrete",      trade: "Concrete",   contract: "$88,000",  billed: "$88,000",  pct: 100, active: 0, status: "complete" },
-];
+export async function getInvoices(): Promise<Invoice[]> {
+  const rows = await db
+    .select({
+      id: invoicesTable.id,
+      sub: subsTable.name,
+      trade: invoicesTable.trade,
+      contractCents: invoicesTable.contractCents,
+      billedCents: invoicesTable.billedCents,
+      pct: invoicesTable.pct,
+      status: invoicesTable.status,
+      period: invoicesTable.period,
+      project: projectsTable.name,
+      lienStatus: invoicesTable.lienStatus,
+      draw: invoicesTable.draw,
+    })
+    .from(invoicesTable)
+    .innerJoin(subsTable, eq(invoicesTable.subId, subsTable.id))
+    .innerJoin(projectsTable, eq(invoicesTable.projectId, projectsTable.id))
+    .orderBy(desc(invoicesTable.id));
 
-export const sov: SovLine[] = [
-  { num: "01", desc: "Site Work & Mobilization", value: 48000,  prev: 48000, curr: 0,     stored: 0 },
-  { num: "02", desc: "Concrete Foundation",       value: 88000,  prev: 88000, curr: 0,     stored: 0 },
-  { num: "03", desc: "Structural Steel",          value: 124000, prev: 96000, curr: 0,     stored: 0 },
-  { num: "04", desc: "Electrical Rough-In",       value: 92000,  prev: 55200, curr: 36800, stored: 0 },
-  { num: "05", desc: "Plumbing Rough-In",         value: 48750,  prev: 9750,  curr: 19500, stored: 0 },
-  { num: "06", desc: "Drywall & Framing",         value: 62000,  prev: 31000, curr: 15500, stored: 0 },
-  { num: "07", desc: "HVAC Equipment",            value: 143000, prev: 57200, curr: 0,     stored: 0 },
-  { num: "08", desc: "Roofing",                   value: 76000,  prev: 0,     curr: 0,     stored: 0 },
-  { num: "09", desc: "Finishes & Painting",       value: 41000,  prev: 0,     curr: 0,     stored: 0 },
-  { num: "10", desc: "Sitework & Paving",         value: 55000,  prev: 0,     curr: 0,     stored: 0 },
-];
+  return rows.map((r) => ({
+    id: r.id,
+    sub: r.sub,
+    trade: r.trade,
+    contract: centsToStr(r.contractCents),
+    billed: centsToStr(r.billedCents),
+    pct: r.pct,
+    status: r.status,
+    period: r.period,
+    project: r.project,
+    lienStatus: r.lienStatus,
+    draw: r.draw,
+  }));
+}
 
-export const waivers: Waiver[] = [
-  { sub: "Coastal Electric",  draw: 3, type: "Conditional",   amount: "$55,200", status: "received",    date: "Mar 28, 2026" },
-  { sub: "Dade Drywall",      draw: 3, type: "Conditional",   amount: "$15,500", status: "received",    date: "Mar 28, 2026" },
-  { sub: "Tropical HVAC",     draw: 3, type: "Conditional",   amount: "$57,200", status: "received",    date: "Mar 29, 2026" },
-  { sub: "SunState Plumbing", draw: 3, type: "Conditional",   amount: "$19,500", status: "received",    date: "Mar 28, 2026" },
-  { sub: "Coastal Electric",  draw: 4, type: "Conditional",   amount: "$92,000", status: "outstanding", date: "—" },
-  { sub: "SunState Plumbing", draw: 2, type: "Unconditional", amount: "$9,750",  status: "outstanding", date: "—" },
-  { sub: "Boca Concrete",     draw: 1, type: "Unconditional", amount: "$88,000", status: "received",    date: "Jan 15, 2026" },
-];
+export async function getSubcontractors(): Promise<Subcontractor[]> {
+  const rows = await db
+    .select()
+    .from(subsTable)
+    .orderBy(asc(subsTable.seq));
+
+  return rows.map((r) => ({
+    name: r.name,
+    trade: r.trade,
+    contract: centsToStr(r.contractCents),
+    billed: centsToStr(r.billedCents),
+    pct: r.pct,
+    active: r.activeCount,
+    status: r.status,
+  }));
+}
+
+export async function getSov(): Promise<SovLine[]> {
+  const rows = await db.select().from(sovTable).orderBy(asc(sovTable.num));
+
+  return rows.map((r) => ({
+    num: r.num,
+    desc: r.description,
+    value: centsToDollars(r.valueCents),
+    prev: centsToDollars(r.prevCents),
+    curr: centsToDollars(r.currCents),
+    stored: centsToDollars(r.storedCents),
+  }));
+}
+
+export async function getWaivers(): Promise<Waiver[]> {
+  const rows = await db
+    .select({
+      sub: subsTable.name,
+      seq: waiversTable.seq,
+      draw: waiversTable.draw,
+      type: waiversTable.type,
+      amountCents: waiversTable.amountCents,
+      status: waiversTable.status,
+      date: waiversTable.date,
+    })
+    .from(waiversTable)
+    .innerJoin(subsTable, eq(waiversTable.subId, subsTable.id))
+    .orderBy(asc(waiversTable.seq));
+
+  return rows.map((r) => ({
+    sub: r.sub,
+    draw: r.draw,
+    type: r.type,
+    amount: centsToStr(r.amountCents),
+    status: r.status,
+    date: r.date,
+  }));
+}
 
 export const fmt = (n: number) => "$" + Number(n).toLocaleString();
 

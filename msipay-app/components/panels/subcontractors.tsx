@@ -1,8 +1,9 @@
-import { subs } from "@/lib/data";
+import { getSubcontractors } from "@/lib/data";
 import { StatusBadge } from "@/components/badge";
 import { Metric } from "./gc-dashboard";
 
-export function Subcontractors() {
+export async function Subcontractors() {
+  const subs = await getSubcontractors();
   return (
     <div>
       <div className="grid grid-cols-4 gap-3 mb-4">
