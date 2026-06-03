@@ -18,6 +18,7 @@ export const invoiceStatusEnum = pgEnum("invoice_status", [
   "approved",
   "rejected",
   "draft",
+  "paid",
 ]);
 export const lienStatusEnum = pgEnum("lien_status", ["received", "outstanding"]);
 export const subStatusEnum = pgEnum("sub_status", ["active", "complete"]);

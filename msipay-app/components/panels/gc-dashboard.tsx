@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getInvoices } from "@/lib/data";
 import { StatusBadge } from "@/components/badge";
+import { InvoiceActions } from "@/components/invoice-actions";
 
 export async function GCDashboard() {
   const invoices = await getInvoices();
@@ -49,7 +50,7 @@ export async function GCDashboard() {
                   <td className="text-fg-secondary">{inv.trade}</td>
                   <td className="font-medium">{inv.billed}</td>
                   <td><StatusBadge status={inv.status} /></td>
-                  <td><button className="btn btn-primary btn-sm">Review</button></td>
+                  <td><InvoiceActions id={inv.id} status={inv.status} /></td>
                 </tr>
               ))}
             </tbody>

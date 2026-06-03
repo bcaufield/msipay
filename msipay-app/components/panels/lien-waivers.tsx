@@ -1,7 +1,8 @@
-import { Send, Eye } from "lucide-react";
+import { Check, RotateCcw } from "lucide-react";
 import { getWaivers } from "@/lib/data";
 import { StatusBadge } from "@/components/badge";
 import { Metric } from "./gc-dashboard";
+import { markWaiverReceived, markWaiverOutstanding } from "@/app/actions/waivers";
 
 export async function LienWaivers() {
   const waivers = await getWaivers();
@@ -27,8 +28,8 @@ export async function LienWaivers() {
               </tr>
             </thead>
             <tbody>
-              {waivers.map((w, i) => (
-                <tr key={i}>
+              {waivers.map((w) => (
+                <tr key={w.id}>
                   <td>{w.sub}</td>
                   <td className="text-fg-secondary">Draw {w.draw}</td>
                   <td className="text-fg-secondary">{w.type}</td>
@@ -37,9 +38,19 @@ export async function LienWaivers() {
                   <td><StatusBadge status={w.status} /></td>
                   <td>
                     {w.status === "outstanding" ? (
-                      <button className="btn btn-sm"><Send size={12} /> Remind</button>
+                      <form action={markWaiverReceived}>
+                        <input type="hidden" name="id" value={w.id} />
+                        <button type="submit" className="btn btn-primary btn-sm">
+                          <Check size={12} /> Mark received
+                        </button>
+                      </form>
                     ) : (
-                      <button className="btn btn-sm"><Eye size={12} /> View</button>
+                      <form action={markWaiverOutstanding}>
+                        <input type="hidden" name="id" value={w.id} />
+                        <button type="submit" className="btn btn-sm">
+                          <RotateCcw size={12} /> Mark outstanding
+                        </button>
+                      </form>
                     )}
                   </td>
                 </tr>

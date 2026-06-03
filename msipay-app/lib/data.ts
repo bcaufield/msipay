@@ -12,7 +12,13 @@ import {
   projects as projectsTable,
 } from "./schema";
 
-export type InvoiceStatus = "pending" | "review" | "approved" | "rejected" | "draft";
+export type InvoiceStatus =
+  | "pending"
+  | "review"
+  | "approved"
+  | "rejected"
+  | "draft"
+  | "paid";
 export type LienStatus = "received" | "outstanding";
 export type SubStatus = "active" | "complete";
 
@@ -50,6 +56,7 @@ export type SovLine = {
 };
 
 export type Waiver = {
+  id: string;
   sub: string;
   draw: number;
   type: "Conditional" | "Unconditional";
@@ -131,6 +138,7 @@ export async function getSov(): Promise<SovLine[]> {
 export async function getWaivers(): Promise<Waiver[]> {
   const rows = await db
     .select({
+      id: waiversTable.id,
       sub: subsTable.name,
       seq: waiversTable.seq,
       draw: waiversTable.draw,
@@ -144,6 +152,7 @@ export async function getWaivers(): Promise<Waiver[]> {
     .orderBy(asc(waiversTable.seq));
 
   return rows.map((r) => ({
+    id: r.id,
     sub: r.sub,
     draw: r.draw,
     type: r.type,
@@ -161,6 +170,7 @@ export const statusLabels: Record<string, string> = {
   approved: "Approved",
   rejected: "Rejected",
   draft: "Draft",
+  paid: "Paid",
   received: "Received",
   outstanding: "Outstanding",
   active: "Active",

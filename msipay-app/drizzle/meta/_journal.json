@@ -15,6 +15,13 @@
       "when": 1780509105972,
       "tag": "0001_late_norman_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780512569449,
+      "tag": "0002_black_spirit",
+      "breakpoints": true
     }
   ]
 }
