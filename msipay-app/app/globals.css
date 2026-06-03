@@ -47,6 +47,7 @@ body {
 .badge-review      { background: #E6F1FB; color: #185FA5; }
 .badge-rejected    { background: #FCEBEB; color: #A32D2D; }
 .badge-draft       { background: #F1EFE8; color: #5F5E5A; }
+.badge-paid        { background: #DDF0EC; color: #0F6E5C; }
 .badge-received    { background: #EAF3DE; color: #3B6D11; }
 .badge-outstanding { background: #FAEEDA; color: #854F0B; }
 .badge-active      { background: #EAF3DE; color: #3B6D11; }

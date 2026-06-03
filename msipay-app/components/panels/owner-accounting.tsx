@@ -1,6 +1,7 @@
 import { getInvoices, fmt } from "@/lib/data";
 import { StatusBadge } from "@/components/badge";
 import { Metric } from "./gc-dashboard";
+import { releasePayment } from "@/app/actions/invoices";
 
 export function OwnerDashboard() {
   const milestones: [string, string][] = [
@@ -113,9 +114,14 @@ export async function AccountingDashboard() {
                     <td><StatusBadge status={inv.lienStatus} /></td>
                     <td>
                       {inv.lienStatus === "received" ? (
-                        <button className="btn btn-primary btn-sm">Release payment</button>
+                        <form action={releasePayment}>
+                          <input type="hidden" name="id" value={inv.id} />
+                          <button type="submit" className="btn btn-primary btn-sm">
+                            Release payment
+                          </button>
+                        </form>
                       ) : (
-                        <span className="text-xs text-fg-tertiary">Blocked</span>
+                        <span className="text-xs text-fg-tertiary">Blocked · awaiting lien waiver</span>
                       )}
                     </td>
                   </tr>

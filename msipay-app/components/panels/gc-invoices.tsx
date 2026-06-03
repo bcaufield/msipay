@@ -1,6 +1,7 @@
 import { Info } from "lucide-react";
 import { getInvoices } from "@/lib/data";
 import { StatusBadge } from "@/components/badge";
+import { InvoiceActions } from "@/components/invoice-actions";
 
 export async function GCInvoices() {
   const invoices = await getInvoices();
@@ -42,13 +43,7 @@ export async function GCInvoices() {
                   </td>
                   <td><StatusBadge status={inv.lienStatus} /></td>
                   <td><StatusBadge status={inv.status} /></td>
-                  <td>
-                    {inv.status === "pending" || inv.status === "review" ? (
-                      <button className="btn btn-primary btn-sm">Review</button>
-                    ) : (
-                      <button className="btn btn-sm">View</button>
-                    )}
-                  </td>
+                  <td><InvoiceActions id={inv.id} status={inv.status} /></td>
                 </tr>
               ))}
             </tbody>
