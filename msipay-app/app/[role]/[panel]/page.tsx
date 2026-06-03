@@ -5,6 +5,7 @@ import { GCInvoices } from "@/components/panels/gc-invoices";
 import { SOV } from "@/components/panels/sov";
 import { LienWaivers } from "@/components/panels/lien-waivers";
 import { Subcontractors } from "@/components/panels/subcontractors";
+import { GCTeam } from "@/components/panels/team";
 import { SubmitInvoice, SubInvoices, SubLienWaivers } from "@/components/panels/sub-panels";
 import {
   OwnerDashboard,
@@ -23,6 +24,7 @@ const registry: Record<PanelKey, PanelComponent> = {
   "gc/sov": SOV,
   "gc/lien-waivers": LienWaivers,
   "gc/subcontractors": Subcontractors,
+  "gc/team": GCTeam,
 
   "sub/submit": SubmitInvoice,
   "sub/invoices": SubInvoices,

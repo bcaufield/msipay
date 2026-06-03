@@ -21,6 +21,7 @@ export const navConfig: Record<Role, NavItem[]> = {
     { panel: "sov",             icon: "Table2",          label: "Schedule of Values" },
     { panel: "lien-waivers",    icon: "ShieldCheck",     label: "Lien Waivers", badge: 1 },
     { panel: "subcontractors",  icon: "Users",           label: "Subcontractors" },
+    { panel: "team",            icon: "UserPlus",        label: "Team" },
   ],
   sub: [
     { panel: "submit",          icon: "FilePlus",        label: "Submit Invoice" },
@@ -46,6 +47,7 @@ export const panelTitles: Record<string, string> = {
   "gc/sov":             "Schedule of Values",
   "gc/lien-waivers":    "Lien Waiver Tracker",
   "gc/subcontractors":  "Subcontractor Management",
+  "gc/team":            "Team & Invitations",
   "sub/submit":         "Submit Pay Application",
   "sub/invoices":       "My Invoices",
   "sub/sov":            "Schedule of Values",

@@ -10,6 +10,7 @@ import {
   sovLines,
   waivers,
   users,
+  invitations,
 } from "./schema";
 
 const d = (dollars: number) => dollars * 100; // dollars → integer cents
@@ -37,6 +38,17 @@ async function main() {
       demoUsers.map((u) => u.email),
     ),
   );
+  await db.delete(invitations);
+
+  // --- Invitations (invite-only signup demo) -------------------------------
+  // One pending invite so the GC "Team" panel isn't empty. Accepting it (via a
+  // magic link) would create a `sub` user.
+  await db.insert(invitations).values({
+    email: "invitee@msipay.demo",
+    role: "sub",
+    status: "pending",
+    invitedByEmail: "gc@msipay.demo",
+  });
 
   // --- Project -------------------------------------------------------------
   const [project] = await db
