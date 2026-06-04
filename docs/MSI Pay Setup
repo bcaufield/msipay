@@ -1,0 +1,6 @@
+Start MSIPay:
+nvm use 22
+npm run build && npm run start
+
+Stop MSIPay:
+fuser -k 3000/tcp
